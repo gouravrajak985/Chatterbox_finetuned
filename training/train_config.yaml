@@ -17,7 +17,7 @@
 #       speaker_B/
 #           ...
 # For T3 fine-tuning, each .wav must have a .txt with the same name.
-data_dir: "/teamspace/studios/this_studio/Chatterbox/training/my_speaker_data"
+data_dir: "/root/Chatterbox/training/my_speaker_data"
 
 # --------------------------------------------------------
 #  General
