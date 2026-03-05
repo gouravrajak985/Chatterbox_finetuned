@@ -1,0 +1,76 @@
+# =========================================================
+#  Chatterbox TTS — Training Configuration
+#  Edit this file, then run:
+#    python training/train_ve.py  --config training/train_config.yaml
+#    python training/train_t3.py  --config training/train_config.yaml
+# =========================================================
+
+# --------------------------------------------------------
+#  Data
+# --------------------------------------------------------
+# Root folder containing speaker sub-folders with audio files.
+# Structure:
+#   data_dir/
+#       speaker_A/  ← folder name = speaker label
+#           clip1.wav
+#           clip2.wav
+#       speaker_B/
+#           ...
+# For T3 fine-tuning, each .wav must have a .txt with the same name.
+data_dir: "/teamspace/studios/this_studio/Chatterbox/training/my_speaker_data"
+
+# --------------------------------------------------------
+#  General
+# --------------------------------------------------------
+device: "cuda"          # "cuda" | "cpu" | "mps"
+use_amp: true           # Mixed precision (recommended for CUDA)
+num_workers: 4          # DataLoader workers (set 0 on Windows if issues)
+save_every_n_epochs: 5  # Save a checkpoint every N epochs
+checkpoint_dir: "./checkpoints"
+
+# --------------------------------------------------------
+#  VoiceEncoder Fine-Tuning  (train_ve.py)
+# --------------------------------------------------------
+# Path to pre-trained VE. Leave empty to let script find it from HF cache.
+# Example: "~/.cache/huggingface/hub/models--ResembleAI--chatterbox/.../ve.safetensors"
+ve_ckpt: ""
+
+num_epochs: 30          # More epochs = better speaker identity learning
+batch_size: 64          # Clips per forward pass
+clip_duration: 3.0      # Seconds per audio clip
+clips_per_speaker: 10   # Clips per speaker for GE2E loss computation
+lr: 1.0e-4              # VoiceEncoder learning rate
+
+# --------------------------------------------------------
+#  T3 LoRA Fine-Tuning  (train_t3.py)
+# --------------------------------------------------------
+# Optional: path to local Chatterbox model dir (skips HF download)
+# model_dir: "~/.cache/huggingface/.../ResembleAI/chatterbox"
+model_dir: ""
+
+t3_num_epochs: 10       # T3 needs fewer epochs than VE
+t3_batch_size: 2        # Keep small (T3 is large); increase if VRAM allows
+t3_lr: 2.0e-4           # LoRA learning rate
+
+# LoRA hyperparameters
+lora_r: 16              # LoRA rank (8-64, higher = more capacity)
+lora_alpha: 32          # LoRA alpha (usually 2x lora_r)
+lora_dropout: 0.05      # Dropout rate on LoRA layers
+
+# Loss weights (T3 uses both text and speech prediction losses)
+speech_loss_weight: 1.0
+text_loss_weight: 0.1
+
+# Output directory for T3 LoRA checkpoints
+t3_output_dir: "./checkpoints/t3_lora"
+
+# Speaker name for extract_speaker_conds.py (used after training)
+speaker_name: "my_speaker"
+
+# --------------------------------------------------------
+#  Speaker Profile Export  (extract_speaker_conds.py)
+# --------------------------------------------------------
+# Reference audio for the new speaker (10–30s is ideal)
+# speaker_audio_path: "./my_speaker_data/speaker_A/reference.wav"
+speakers_dir: "./speakers"
+exaggeration: 0.5       # 0.5 = neutral, higher = more expressive
